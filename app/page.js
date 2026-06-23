@@ -170,15 +170,19 @@ export default function Home() {
 
   useEffect(() => {
     if (mounted) {
-      // Upsert books into Supabase
-      await supabase.from('books').upsert(books);
+      const upsertBooks = async () => {
+        await supabase.from('books').upsert(books);
+      };
+      upsertBooks();
     }
   }, [books, mounted]);
 
   useEffect(() => {
     if (mounted) {
-      // Upsert members into Supabase
-      await supabase.from('members').upsert(members);
+      const upsertMembers = async () => {
+        await supabase.from('members').upsert(members);
+      };
+      upsertMembers();
     }
   }, [members, mounted]);
 
@@ -190,8 +194,10 @@ export default function Home() {
 
   useEffect(() => {
     if (mounted) {
-      // Upsert notification logs into Supabase
-      await supabase.from('notification_logs').upsert(notificationLogs);
+      const upsertLogs = async () => {
+        await supabase.from('notification_logs').upsert(notificationLogs);
+      };
+      upsertLogs();
     }
   }, [notificationLogs, mounted]);
 

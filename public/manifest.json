@@ -1,0 +1,16 @@
+{
+  "name": "Book Club Library",
+  "short_name": "BookClub",
+  "description": "A simple library management UI using Supabase.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#0d1117",
+  "icons": [
+    {
+      "src": "/next.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml"
+    }
+  ]
+}
