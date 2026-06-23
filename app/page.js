@@ -155,18 +155,35 @@ export default function Home() {
   
   // Hydration fix & LocalStorage Sync
   useEffect(() => {
-    setMounted(true);
-    // Fetch data from Supabase on mount
-    const fetchData = async () => {
-      const { data: booksData, error: booksError } = await supabase.from('books').select('*');
-      if (!booksError && booksData) setBooks(booksData);
-      const { data: membersData, error: membersError } = await supabase.from('members').select('*');
-      if (!membersError && membersData) setMembers(membersData);
-      const { data: logsData, error: logsError } = await supabase.from('notification_logs').select('*');
-      if (!logsError && logsData) setNotificationLogs(logsData);
-    };
-    fetchData();
-  }, []);
+  setMounted(true);
+  const fetchData = async () => {
+    // Fetch books
+    const { data: booksData, error: booksError } = await supabase
+      .from('books')
+      .select('*');
+    if (booksError) {
+      console.error('Error fetching books:', booksError);
+    }
+    setBooks(booksData ?? []);
+
+    // Fetch members
+    const { data: membersData, error: membersError } = await supabase
+      .from('members')
+      .select('*');
+    if (membersError) {
+      console.error('Error fetching members:', membersError);
+    }
+    setMembers(membersData ?? []);
+
+    // Fetch notification logs (optional)
+    const { data: logsData, error: logsError } = await supabase
+      .from('notification_logs')
+      .select('*');
+    if (logsError) console.error('Error fetching logs:', logsError);
+    setNotificationLogs(logsData ?? []);
+  };
+  fetchData();
+}, []);
 
   useEffect(() => {
     if (mounted) {
