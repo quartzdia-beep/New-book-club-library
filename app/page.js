@@ -19,6 +19,12 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 
+// Expose supabase on the browser's global window for debugging (only in dev)
+if (typeof window !== 'undefined') {
+  // @ts-ignore – make it available for console testing
+  window.supabase = supabase;
+}
+
 // Helper to format date
 const formatDate = (dateObj) => {
   return dateObj.toLocaleDateString("en-US", {
@@ -56,6 +62,40 @@ const initialMembers = [
   { id: "m2", name: "John Smith", email: "john@example.com", joinDate: "2026-02-10" },
   { id: "m3", name: "Alice Cooper", email: "alice@example.com", joinDate: "2026-03-05" }
 ];
+
+const handleAddBook = async (e) => {
+  e.preventDefault();
+  if (!newBook.title || !newBook.author) return;
+
+  const id = "b_" + Date.now();
+  const newBookObj = {
+    id,
+    title: newBook.title,
+    author: newBook.author,
+    genre: newBook.genre || "General",
+    status: "Available",
+    borrowerId: null,
+    borrowerName: null,
+    checkoutDate: null,
+    dueDate: null,
+    renewalCount: 0,
+    lastNotificationDate: null,
+    notificationCount: 0,
+  };
+
+  // Insert into Supabase (requires INSERT policy)
+  const { error } = await supabase.from('books').insert([newBookObj]);
+  if (error) {
+    console.error('Supabase insert error →', error);
+    showToast(`Failed to add "${newBook.title}" – ${error.message}`);
+    return;
+  }
+
+  // Optimistically update UI
+  setBooks(prev => [...prev, newBookObj]);
+  setNewBook({ title: "", author: "", genre: "" });
+  showToast(`"${newBookObj.title}" added to the library.`);
+};
 
 const initialBooks = [
   {
@@ -164,6 +204,8 @@ export default function Home() {
     if (booksError) {
       console.error('Error fetching books:', booksError);
     }
+    console.log('Raw fetched books:', booksData);
+    console.log('Fetched books count:', booksData?.length);
     setBooks(booksData ?? []);
 
     // Fetch members
@@ -173,6 +215,8 @@ export default function Home() {
     if (membersError) {
       console.error('Error fetching members:', membersError);
     }
+    console.log('Raw fetched members:', membersData);
+    console.log('Fetched members count:', membersData?.length);
     setMembers(membersData ?? []);
 
     // Fetch notification logs (optional)
@@ -180,6 +224,7 @@ export default function Home() {
       .from('notification_logs')
       .select('*');
     if (logsError) console.error('Error fetching logs:', logsError);
+    console.log('Raw fetched logs:', logsData);
     setNotificationLogs(logsData ?? []);
   };
   fetchData();
@@ -299,10 +344,10 @@ export default function Home() {
   const totalMembersCount = members.length;
 
   // Book Handlers
-  const handleAddBook = (e) => {
+  const handleAddBook = async (e) => {
     e.preventDefault();
     if (!newBook.title || !newBook.author) return;
-    
+
     const id = "b_" + Date.now();
     const newBookObj = {
       id,
@@ -318,7 +363,16 @@ export default function Home() {
       lastNotificationDate: null,
       notificationCount: 0
     };
-    
+
+    // Insert into Supabase (requires INSERT policy)
+    const { error } = await supabase.from('books').insert([newBookObj]);
+    if (error) {
+      console.error('Supabase insert error →', error);
+      showToast(`Failed to add "${newBook.title}" – ${error.message}`);
+      return;
+    }
+
+    // Update UI optimistically
     setBooks(prev => [...prev, newBookObj]);
     setNewBook({ title: "", author: "", genre: "" });
     showToast(`"${newBookObj.title}" added to the library.`);
